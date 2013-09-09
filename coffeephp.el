@@ -1,19 +1,21 @@
-(defconst initial-regexp "^ *\\(\\$*[a-zA-Z0-9_-]+\\) *?= *$")
+(defconst initial-regexp "^ *\\(\\$*[a-zA-Z0-9_-]+\\) *= *$")
+(defconst branch-regexp "^ *\\(\\$*[a-zA-Z0-9_-]+\\): *$")
+(defconst leaf-regexp "^ *\\(\\$*[a-zA-Z0-9_-]+\\): *\\([a-zA-Z0-9_-\"\']+\\)$")
 
 kids =            ;; initial
   brother:        ;; branch
-    name: "Max"   ;; leaf
+    name: 'Max'   ;; leaf
     age:  11      ;; leaf
   sister:         ;; branch
-    name: "Ida"   ;; leaf
+    name: 'Ida'   ;; leaf
       age:  9     ;; leaf
 
 kids =
   brother:
-    name: "Max"
+    name: 'Max'
     age:  11
   sister:
-    name: "Ida"
+    name: 'Ida'
       age:  9
 
 
@@ -25,11 +27,28 @@ kids =
       (setq whitespace (- (match-end 1) (match-beginning 1)))
       (message "--%d--" whitespace)
       (if (equal n 0)
+        ;; make sure string matches initial (it should, though)
+        ;; replace with php form
         (setq repl (append repl (replace-regexp-in-string initial-regexp "$\\1 = array(" line)))
-        ;; (if (string-match 
+        ;; else not initial: find out if branch or leaf
       )
       (setq n (+ n 1)))
     (message "%S" repl)))
+
+(defun cfphp-line-type (line)
+  "Given a string, return the type of coffeephp line. One of either \"initial\", \"branch\", \"leaf\", or nil"
+  (interactive)
+  (let ((type))
+    (if (string-match initial-regexp line)
+      (setq type "initial"))
+    (if (string-match branch-regexp line)
+      (setq type "branch"))
+    (if (string-match leaf-regexp line)
+      (setq type "leaf"))
+    type))
+
+(cfphp-line-type "hello:'there'")
+
 
 (defun cfphp-n ()
   (interactive)
