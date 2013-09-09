@@ -25,12 +25,13 @@ kids =
     (loop for line in (cfphp-list) do
       (string-match "^\\([ |\\t]*\\)" line)
       (setq whitespace (- (match-end 1) (match-beginning 1)))
-      (message "--%d--" whitespace)
       (if (equal n 0)
         ;; make sure string matches initial (it should, though)
         ;; replace with php form
-        (setq repl (append repl (replace-regexp-in-string initial-regexp "$\\1 = array(" line)))
+        (setq repl (append repl (cons (replace-regexp-in-string initial-regexp "$\\1 = array(" line) nil)))
         ;; else not initial: find out if branch or leaf
+        (if (equal "leaf" (cfphp-line-type line))
+            (setq repl (append repl (cons (replace-regexp-in-string leaf-regexp "\\1 => \\2" line) nil))))
       )
       (setq n (+ n 1)))
     (message "%S" repl)))
@@ -47,7 +48,7 @@ kids =
       (setq type "leaf"))
     type))
 
-(cfphp-line-type "hello:'there'")
+(cfphp-line-type "  brother:")
 
 
 (defun cfphp-n ()
