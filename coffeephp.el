@@ -1,14 +1,50 @@
+;; find backward from point the 'initial'
+;; create full tree
+;; write initial w/ closing, step inside
+;; 
+
+(setq tree '("kids" ("brother" ("name" . "Max") ("age" . 11)) ("sister" ("name" . "Ida") ("age" . 9))))
+
+    kids =
+      brother:
+        name: 'Max'
+        age:  11
+      sister:
+        name: 'Ida'
+        age:  9
+
+    ;; step 1 -- initial with closing
+    $kids = array(
+    
+    );
+
+    ;; step 2 -- 2nd level
+    $kids = array(
+      'brother' => array(
+
+      ),
+      'sister' => array(
+
+      )
+    );
+
+    ;; 
+    $kids = array(
+      'brother' => array(
+        'name' => 'Max',
+        'age' => 11
+      ),
+      'sister' => array(
+        'name' => 'Ida',
+        'age' => 9
+      )
+    );
+
+
+
 (defconst initial-regexp "^\\( *\\)\\(\\$*[a-zA-Z0-9_-]+\\) *= *$")
 (defconst branch-regexp "^\\( *\\)\\(\\$*[a-zA-Z0-9_-]+\\): *$")
 (defconst leaf-regexp "^\\( *\\)\\(\\$*[a-zA-Z0-9_-]+\\): *\\([a-zA-Z0-9_-\"\']+\\)$")
-
-kids =            ;; initial
-  brother:        ;; branch
-    name: 'Max'   ;; leaf
-    age:  11      ;; leaf
-  sister:         ;; branch
-    name: 'Ida'   ;; leaf
-      age:  9     ;; leaf
 
     kids =
       brother:
@@ -28,7 +64,6 @@ kids =            ;; initial
       (message "depth: %d" depth)
       (string-match "^ *" line)
       (setq ws (length (match-string 0 line)))
-      ;; (message "ws < prev-ws: %d < %d" ws prev-ws)
       (when (< ws prev-ws)
         (setq depth (- depth 1))        
         (setq str (concat str (concat (make-string ws ?\s) "),\n"))))
@@ -41,9 +76,8 @@ kids =            ;; initial
       (setq depth (- depth 1)))
     (insert str)))
 
-
 (defun cfphp-l ()
-  (interactive)
+  "Loops through the list of lines, does replacements based on type of match."
   (let ((repl '()))
     (loop for line in (cfphp-list) do
       (when (equal "initial" (cfphp-line-type line))
@@ -58,7 +92,6 @@ kids =            ;; initial
 
 (defun cfphp-line-type (line)
   "Given a string, return the type of coffeephp line. One of either \"initial\", \"branch\", \"leaf\", or nil"
-  (interactive)
   (let ((type))
     (if (string-match initial-regexp line)
       (setq type "initial"))
@@ -68,17 +101,8 @@ kids =            ;; initial
       (setq type "leaf"))
     type))
 
-(cfphp-line-type "  brother:")
-
-
-(defun cfphp-n ()
-  (interactive)
-  (let ((fst (nth 0 (cfphp-list))))
-    (setq fst (replace-regexp-in-string "\\(^ *[a-zA-Z0-9_-]+\\) *= *$" "$\\1 = array(" fst))
-    (message "%s" fst)))
-
 (defun cfphp-list ()
-  (interactive)
+  "Searches backward from point to fine match for initial regexp, returns list of lines."
   (let ((end (nth 5 (posn-at-point)))
         (beg (re-search-backward initial-regexp)))
     (split-string (buffer-substring-no-properties beg end) "\n")))
@@ -86,9 +110,6 @@ kids =            ;; initial
 ;; Get absolute position of current point
 (nth 5 (posn-at-point))
 (buffer-substring-no-properties beg end)
-
-(setq tst '())
-(append tst "there")
 
 ;; use indentation given
 ;; keep track of indentation level of region being evaluated
