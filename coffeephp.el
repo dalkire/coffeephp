@@ -21,33 +21,39 @@ kids =            ;; initial
 (defun cfphp-c ()
   (interactive)
   (let ((str "")
+        (depth 0)
         (prev-ws 0)
         (ws 0))
     (loop for line in (cfphp-l) do
+      (message "depth: %d" depth)
       (string-match "^ *" line)
       (setq ws (length (match-string 0 line)))
-      (message "ws < prev-ws: %d < %d" ws prev-ws)
-      (if (< ws prev-ws)
+      ;; (message "ws < prev-ws: %d < %d" ws prev-ws)
+      (when (< ws prev-ws)
+        (setq depth (- depth 1))        
         (setq str (concat str (concat (make-string ws ?\s) "),\n"))))
+      (when (> ws prev-ws)
+        (setq depth (+ depth 1)))
       (setq str (concat str (concat line "\n")))
       (setq prev-ws ws))
+    (while (> depth 1)
+      (setq str (concat str "),\n"))
+      (setq depth (- depth 1)))
     (insert str)))
-    
+
+
 (defun cfphp-l ()
   (interactive)
-  (let ((depth 0) (n 0) (repl '()) (whitespace 0))
+  (let ((repl '()))
     (loop for line in (cfphp-list) do
-      (if (equal n 0)
-        ;; make sure string matches initial (it should, though)
+      (when (equal "initial" (cfphp-line-type line))
         ;; replace with php form
-        (setq repl (append repl (cons (replace-regexp-in-string initial-regexp "\\1$\\2 = array(" line) nil)))
-        ;; else not initial: find out if branch or leaf
-        (if (equal "branch" (cfphp-line-type line))
-            (setq repl (append repl (cons (replace-regexp-in-string branch-regexp "\\1\\2 => array(" line) nil))))
-        (if (equal "leaf" (cfphp-line-type line))
-            (setq repl (append repl (cons (replace-regexp-in-string leaf-regexp "\\1\\2 => \\3" line) nil))))
-      )
-      (setq n (+ n 1)))
+        (setq repl (append repl (cons (replace-regexp-in-string initial-regexp "\\1$\\2 = array(" line) nil))))
+      ;; else not initial: find out if branch or leaf
+      (when (equal "branch" (cfphp-line-type line))
+        (setq repl (append repl (cons (replace-regexp-in-string branch-regexp "\\1\\2 => array(" line) nil))))
+      (when (equal "leaf" (cfphp-line-type line))
+        (setq repl (append repl (cons (replace-regexp-in-string leaf-regexp "\\1\\2 => \\3" line) nil)))))
     repl))
 
 (defun cfphp-line-type (line)
