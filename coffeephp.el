@@ -10,27 +10,33 @@ kids =            ;; initial
     name: 'Ida'   ;; leaf
       age:  9     ;; leaf
 
-kids =
-  brother:
-    name: 'Max'
-    age:  11
-  sister:
-    name: 'Ida'
-      age:  9
+    kids =
+      brother:
+        name: 'Max'
+        age:  11
+      sister:
+        name: 'Ida'
+        age:  9
 
 (defun cfphp-c ()
   (interactive)
-  (let ((str "\n\n\n"))
+  (let ((str "")
+        (prev-ws 0)
+        (ws 0))
     (loop for line in (cfphp-l) do
-      (setq str (concat str (concat line "\n"))))
+      (string-match "^ *" line)
+      (setq ws (length (match-string 0 line)))
+      (message "ws < prev-ws: %d < %d" ws prev-ws)
+      (if (< ws prev-ws)
+        (setq str (concat str (concat (make-string ws ?\s) "),\n"))))
+      (setq str (concat str (concat line "\n")))
+      (setq prev-ws ws))
     (insert str)))
     
 (defun cfphp-l ()
   (interactive)
   (let ((depth 0) (n 0) (repl '()) (whitespace 0))
     (loop for line in (cfphp-list) do
-      (string-match "^\\([ |\\t]*\\)" line)
-      (setq whitespace (- (match-end 1) (match-beginning 1)))
       (if (equal n 0)
         ;; make sure string matches initial (it should, though)
         ;; replace with php form
