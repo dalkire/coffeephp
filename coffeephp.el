@@ -25,14 +25,20 @@
                   ("name" ("Max"))
                   ("age"  (11))))
 
+(setq name '("name" ("Max")))
+(setq tree kids)
+(length (cadr kids))    ;; 3
+(length (cadr brother)) ;; 2
+(length (cadr name))    ;; 1
 
-(cdr kids)
-(cdr brother)
+(length (cdr '()))
 
 (defun mycadr ()
   (interactive)
   (while (not (null tree))
-    (message "%S" tree)
+    (if (> (length (cadr tree)) 1)
+      (message "%S array{{ %S }}" (car tree) (cdr tree))
+      (message "%S" (cadr tree)))
     (setq tree (cadr tree))))
 
 (cadr (cadr (cadr (cadr tree))))
@@ -100,6 +106,9 @@ kids sister age 9
 (defconst branch-regexp "^\\( *\\)\\(\\$*[a-zA-Z0-9_-]+\\): *$")
 (defconst leaf-regexp "^\\( *\\)\\(\\$*[a-zA-Z0-9_-]+\\): *\\([a-zA-Z0-9_-\"\']+\\)$")
 
+
+(defconst kidslist '("    kids =" "      brother:" "        name: 'Max'" "        age:  11" "      sister:" "        name: 'Ida'" "        age:  9"))
+
     kids =
       brother:
         name: 'Max'
@@ -144,6 +153,20 @@ kids sister age 9
         (setq repl (append repl (cons (replace-regexp-in-string leaf-regexp "\\1\\2 => \\3" line) nil)))))
     repl))
 
+(mapcar
+ (lambda (l) (message ":\n: %s" l))
+ kidslist)
+
+
+(defun cfphp-indent-level (line)
+  (string-match "^ *" line)
+  (length (match-string 0 line)))
+
+(defun cfphp-print-indent-level ()
+  (interactive)
+  (loop for line in (cfphp-list) do
+        (message "indent-level: %d" (cfphp-indent-level line))))
+
 (defun cfphp-line-type (line)
   "Given a string, return the type of coffeephp line. One of either \"initial\", \"branch\", \"leaf\", or nil"
   (let ((type))
@@ -160,6 +183,10 @@ kids sister age 9
   (let ((end (nth 5 (posn-at-point)))
         (beg (re-search-backward initial-regexp)))
     (split-string (buffer-substring-no-properties beg end) "\n")))
+
+(defun cfphp-list-print ()
+  (interactive)
+  (message "%S" (cfphp-list)))
 
 ;; Get absolute position of current point
 (nth 5 (posn-at-point))
