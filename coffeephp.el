@@ -1,9 +1,61 @@
 ;; find backward from point the 'initial'
 ;; create full tree
 ;; write initial w/ closing, step inside
-;; 
+;;
 
-(setq tree '("kids" ("brother" ("name" . "Max") ("age" . 11)) ("sister" ("name" . "Ida") ("age" . 9))))
+;; breadth-first search
+;; car = array(cdr)
+        ;; (("brother" ("name" ("Max")) ("age" (11))) ("sister" ("name" ("Ida")) ("age" (9))))
+
+;; dolist cdr 
+;; car = array(
+;;   car => array(cdr)
+;;   car => array(cdr)
+;; );
+
+(setq kids '("kids"
+               ("brother"
+                  ("name" ("Max"))
+                  ("age"  (11)))
+               ("sister"
+                  ("name" ("Ida"))
+                  ("age"  (9)))))
+
+(setq brother '("brother"
+                  ("name" ("Max"))
+                  ("age"  (11))))
+
+
+(cdr kids)
+(cdr brother)
+
+(defun mycadr ()
+  (interactive)
+  (while (not (null tree))
+    (message "%S" tree)
+    (setq tree (cadr tree))))
+
+(cadr (cadr (cadr (cadr tree))))
+
+(message "%s = %S" (car tree) (cdr tree))
+
+(dolist (mycar tree)
+  (message "%S" mycar))
+
+(car (cdr (cdr (car (cdr tree)))))
+
+(dolist (term tree)
+  (message "%S" term))
+
+
+
+(setq tr '("kids" ("brother" ("name" ("max"))
+                             ("age"  (11)))))
+
+kids brother name max
+kids brother age 11
+kids sister name ida
+kids sister age 9
 
     kids =
       brother:
@@ -15,7 +67,9 @@
 
     ;; step 1 -- initial with closing
     $kids = array(
-    
+      'brother' => array(
+        'name' => 'Max'
+      )
     );
 
     ;; step 2 -- 2nd level
