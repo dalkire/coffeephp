@@ -1,6 +1,6 @@
-;; find backward from point the 'initial'
+;; find backward from point the 'root'
 ;; create full tree
-;; write initial w/ closing, step inside
+;; write root w/ closing, step inside
 ;;
 
 ;; breadth-first search
@@ -71,7 +71,7 @@ kids sister age 9
         name: 'Ida'
         age:  9
 
-    ;; step 1 -- initial with closing
+    ;; step 1 -- root with closing
     $kids = array(
       'brother' => array(
         'name' => 'Max'
@@ -102,7 +102,7 @@ kids sister age 9
 
 
 
-(defconst initial-regexp "^\\( *\\)\\(\\$*[a-zA-Z0-9_-]+\\) *= *$")
+(defconst root-regexp "^\\( *\\)\\(\\$*[a-zA-Z0-9_-]+\\) *= *$")
 (defconst branch-regexp "^\\( *\\)\\(\\$*[a-zA-Z0-9_-]+\\): *$")
 (defconst leaf-regexp "^\\( *\\)\\(\\$*[a-zA-Z0-9_-]+\\): *\\([a-zA-Z0-9_-\"\']+\\)$")
 
@@ -143,10 +143,10 @@ kids sister age 9
   "Loops through the list of lines, does replacements based on type of match."
   (let ((repl '()))
     (loop for line in (cfphp-list) do
-      (when (equal "initial" (cfphp-line-type line))
+      (when (equal "root" (cfphp-line-type line))
         ;; replace with php form
-        (setq repl (append repl (cons (replace-regexp-in-string initial-regexp "\\1$\\2 = array(" line) nil))))
-      ;; else not initial: find out if branch or leaf
+        (setq repl (append repl (cons (replace-regexp-in-string root-regexp "\\1$\\2 = array(" line) nil))))
+      ;; else not root: find out if branch or leaf
       (when (equal "branch" (cfphp-line-type line))
         (setq repl (append repl (cons (replace-regexp-in-string branch-regexp "\\1\\2 => array(" line) nil))))
       (when (equal "leaf" (cfphp-line-type line))
@@ -156,6 +156,56 @@ kids sister age 9
 (mapcar
  (lambda (l) (message ":\n: %s" l))
  kidslist)
+
+(cons 0 (append '(1 2 3) (list (nth 1 kidslist))))
+(append '(b c d) '(a))
+
+(let ((n 0)
+      (ws-stack '()))
+  (loop for line in kidslist do
+    (setq curr-indent (cfphp-indent-level line))
+    ;; (message "Curr-indent: %d\nCurr-stack: %S" curr-indent ws-stack)
+    (when (cfphp-leafp line)
+      (message "leafT: %s" line)
+      (message "leafF: %s" line))        
+    (if (= n 0)
+      (push curr-indent ws-stack)
+      (when (> curr-indent (car ws-stack))
+        (push curr-indent ws-stack))
+        ;; (message "indent me: %S" ws-stack))
+      (when (< curr-indent (car ws-stack))
+        (setq popped (pop ws-stack))))
+        ;; (message "outdent me(popped-%d): %S" popped ws-stack)))
+    (incf n)))
+
+(let ((n 0)
+      (prev-ln))
+  (loop for ln in kidslist do
+    (when prev-ln
+      (when (indent> ln prev-ln)
+        (message "more indent"))
+      (when (indent< ln prev-ln)
+        (message "less indent"))
+      (when (indent= ln prev-ln)
+        (message "equal indent")))
+    (incf n)
+    (setq prev-ln ln)))
+
+(defun indent< (a b)
+  "Returns t if indent of a < indent of b, nil otherwise"
+  (< (cfphp-indent-level a) (cfphp-indent-level b)))
+
+(defun indent> (a b)
+  "Returns t if indent of a > indent of b, nil otherwise"
+  (> (cfphp-indent-level a) (cfphp-indent-level b)))
+
+(defun indent= (a b)
+  "Returns t if indent of a = indent of b, nil otherwise"
+  (= (cfphp-indent-level a) (cfphp-indent-level b)))
+
+
+(defun cfphp-leafp (line)
+  (equal "leaf" (cfphp-line-type line)))
 
 
 (defun cfphp-indent-level (line)
@@ -168,10 +218,10 @@ kids sister age 9
         (message "indent-level: %d" (cfphp-indent-level line))))
 
 (defun cfphp-line-type (line)
-  "Given a string, return the type of coffeephp line. One of either \"initial\", \"branch\", \"leaf\", or nil"
+  "Given a string, return the type of coffeephp line. One of either \"root\", \"branch\", \"leaf\", or nil"
   (let ((type))
-    (if (string-match initial-regexp line)
-      (setq type "initial"))
+    (if (string-match root-regexp line)
+      (setq type "root"))
     (if (string-match branch-regexp line)
       (setq type "branch"))
     (if (string-match leaf-regexp line)
@@ -179,9 +229,9 @@ kids sister age 9
     type))
 
 (defun cfphp-list ()
-  "Searches backward from point to fine match for initial regexp, returns list of lines."
+  "Searches backward from point to fine match for root regexp, returns list of lines."
   (let ((end (nth 5 (posn-at-point)))
-        (beg (re-search-backward initial-regexp)))
+        (beg (re-search-backward root-regexp)))
     (split-string (buffer-substring-no-properties beg end) "\n")))
 
 (defun cfphp-list-print ()
