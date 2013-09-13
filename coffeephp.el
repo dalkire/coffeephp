@@ -55,14 +55,6 @@
 
 
 
-(setq tr '("kids" ("brother" ("name" ("max"))
-                             ("age"  (11)))))
-
-kids brother name max
-kids brother age 11
-kids sister name ida
-kids sister age 9
-
     kids =
       brother:
         name: 'Max'
@@ -117,25 +109,44 @@ kids sister age 9
         name: 'Ida'
         age:  9
 
+;; THIS IS A GOOD. USE ACTUAL WS SUBSTRING THOUGH
+(let ((ws-stack '()))
+  (loop for ln in kidslist do
+    (setq ws (cfphp-indent-level ln))
+    (when (not (cfphp-leafp ln))
+      ;; while < car level, close parens and pop
+      (while (and (car ws-stack) (<= ws (car ws-stack)))
+        (message "%s" (concat (make-string (pop ws-stack) ?\s) "),")))
+      (push ws ws-stack))
+    (message ln))
+  (dolist (n (butlast ws-stack))
+    (message "%s" (concat (make-string n ?\s) ")"))
+  (message "%s" (concat (make-string (car (last ws-stack)) ?\s) ");"))))
+
 (defun cfphp-c ()
   (interactive)
   (let ((str "")
+        (ws-stack '())
         (depth 0)
         (prev-ws 0)
         (ws 0))
     (loop for line in (cfphp-l) do
-      (message "depth: %d" depth)
+      (message "%s" line)
+      (message "%s" (equal "leaf" (cfphp-line-type line)))
       (string-match "^ *" line)
       (setq ws (length (match-string 0 line)))
       (when (< ws prev-ws)
+        (pop ws-stack)
         (setq depth (- depth 1))        
         (setq str (concat str (concat (make-string ws ?\s) "),\n"))))
       (when (> ws prev-ws)
+        (when (not (cfphp-leafp line))
+          (push ws ws-stack))
         (setq depth (+ depth 1)))
       (setq str (concat str (concat line "\n")))
       (setq prev-ws ws))
-    (while (> depth 1)
-      (setq str (concat str "),\n"))
+    (while (setq ws (pop ws-stack))
+      (setq str (concat str (concat (make-string ws ?\s) "),\n")))
       (setq depth (- depth 1)))
     (insert str)))
 
@@ -171,23 +182,24 @@ kids sister age 9
     (if (= n 0)
       (push curr-indent ws-stack)
       (when (> curr-indent (car ws-stack))
-        (push curr-indent ws-stack))
-        ;; (message "indent me: %S" ws-stack))
+        (push curr-indent ws-stack)
+        (message "indent me: %S" ws-stack))
       (when (< curr-indent (car ws-stack))
-        (setq popped (pop ws-stack))))
-        ;; (message "outdent me(popped-%d): %S" popped ws-stack)))
+        (setq popped (pop ws-stack)))
+        (message "outdent me(popped-%d): %S" popped ws-stack)))
     (incf n)))
 
 (let ((n 0)
       (prev-ln))
   (loop for ln in kidslist do
     (when prev-ln
-      (when (indent> ln prev-ln)
-        (message "more indent"))
+      ;; (when (indent> ln prev-ln)
+        ;; (message "more indent"))
       (when (indent< ln prev-ln)
-        (message "less indent"))
-      (when (indent= ln prev-ln)
-        (message "equal indent")))
+        (message ")")))
+      ;; (when (indent= ln prev-ln)
+        ;; (message "equal indent")))
+    (message ln)
     (incf n)
     (setq prev-ln ln)))
 
@@ -220,11 +232,11 @@ kids sister age 9
 (defun cfphp-line-type (line)
   "Given a string, return the type of coffeephp line. One of either \"root\", \"branch\", \"leaf\", or nil"
   (let ((type))
-    (if (string-match root-regexp line)
+    (when (string-match root-regexp line)
       (setq type "root"))
-    (if (string-match branch-regexp line)
+    (when (string-match branch-regexp line)
       (setq type "branch"))
-    (if (string-match leaf-regexp line)
+    (when (string-match leaf-regexp line)
       (setq type "leaf"))
     type))
 
