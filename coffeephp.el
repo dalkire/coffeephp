@@ -109,19 +109,32 @@
         name: 'Ida'
         age:  9
 
-;; THIS IS A GOOD. USE ACTUAL WS SUBSTRING THOUGH
-(let ((ws-stack '()))
-  (loop for ln in kidslist do
-    (setq ws (cfphp-indent-level ln))
+;; Something is wrong but very close
+(let ((str "\n\n\n")
+      (ws-stack '()))
+  (dolist (ln kidslist)
+    (setq ws (cfphp-ws ln))
     (when (not (cfphp-leafp ln))
       ;; while < car level, close parens and pop
-      (while (and (car ws-stack) (<= ws (car ws-stack)))
-        (message "%s" (concat (make-string (pop ws-stack) ?\s) "),")))
+      (while (and (car ws-stack) (<= (length ws) (length (car ws-stack))))
+        (setq str (format "%s%s),\n" str (pop ws-stack))))
       (push ws ws-stack))
-    (message ln))
+    (setq str (format "%s%s\n" str (cfphp-replace ln))))
   (dolist (n (butlast ws-stack))
-    (message "%s" (concat (make-string n ?\s) ")"))
-  (message "%s" (concat (make-string (car (last ws-stack)) ?\s) ");"))))
+    (setq str (format "%s%s\n" str n)))
+  (setq str (format "%s%s);" str (car (last ws-stack))))
+  (insert str))
+
+
+(defun cfphp-replace (ln)
+  (message "%s" ln)
+  (when (cfphp-rootp ln)
+    (setq ln (append ln (cons (replace-regexp-in-string root-regexp "\\1$\\2 = array(" ln) nil)))
+  (when (cfphp-branchp ln)
+    (setq ln (append ln (cons (replace-regexp-in-string branch-regexp "\\1\\2 => array(" ln) nil))))
+  (when (cfphp-leafp ln)
+      (setq ln (append ln (cons (replace-regexp-in-string leaf-regexp "\\1\\2 => \\3" ln) nil))))
+  ln))
 
 (defun cfphp-c ()
   (interactive)
@@ -216,9 +229,18 @@
   (= (cfphp-indent-level a) (cfphp-indent-level b)))
 
 
-(defun cfphp-leafp (line)
-  (equal "leaf" (cfphp-line-type line)))
+(defun cfphp-rootp (ln)
+  (equal "root" (cfphp-line-type ln)))
 
+(defun cfphp-branchp (ln)
+  (equal "branch" (cfphp-line-type ln)))
+
+(defun cfphp-leafp (ln)
+  (equal "leaf" (cfphp-line-type ln)))
+
+(defun cfphp-ws (line)
+  (string-match "^ *" line)
+  (substring line (match-beginning 0) (match-end 0)))
 
 (defun cfphp-indent-level (line)
   (string-match "^ *" line)
