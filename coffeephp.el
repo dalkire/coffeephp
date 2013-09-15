@@ -109,7 +109,11 @@
         name: 'Ida'
         age:  9
 
-;; Something is wrong but very close
+  (dolist (ln kidslist)
+    (message "--> %s" (cfphp-replace ln)))
+
+
+;; This is right, but could use some cleanup and usage flexibility
 (let ((str "\n\n\n")
       (ws-stack '()))
   (dolist (ln kidslist)
@@ -121,20 +125,23 @@
       (push ws ws-stack))
     (setq str (format "%s%s\n" str (cfphp-replace ln))))
   (dolist (n (butlast ws-stack))
-    (setq str (format "%s%s\n" str n)))
+    (setq str (format "%s%s)\n" str n)))
   (setq str (format "%s%s);" str (car (last ws-stack))))
   (insert str))
 
 
+
 (defun cfphp-replace (ln)
-  (message "%s" ln)
   (when (cfphp-rootp ln)
-    (setq ln (append ln (cons (replace-regexp-in-string root-regexp "\\1$\\2 = array(" ln) nil)))
+    (message "root")
+    (setq ln (replace-regexp-in-string root-regexp "\\1$\\2 = array(" ln)))
   (when (cfphp-branchp ln)
-    (setq ln (append ln (cons (replace-regexp-in-string branch-regexp "\\1\\2 => array(" ln) nil))))
+    (message "branch")
+    (setq ln (replace-regexp-in-string branch-regexp "\\1'\\2' => array(" ln)))
   (when (cfphp-leafp ln)
-      (setq ln (append ln (cons (replace-regexp-in-string leaf-regexp "\\1\\2 => \\3" ln) nil))))
-  ln))
+    (message "leaf")
+    (setq ln (replace-regexp-in-string leaf-regexp "\\1'\\2' => \\3" ln)))
+  ln)
 
 (defun cfphp-c ()
   (interactive)
