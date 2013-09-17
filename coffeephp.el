@@ -1,7 +1,7 @@
 (defconst root-regexp "^\\( *\\)\\(\\$*[a-zA-Z0-9_-]+\\) *= *$")
 (defconst branch-regexp "^\\( *\\)\\(\\$*[a-zA-Z0-9_-]+\\): *$")
 (defconst leaf-regexp "^\\( *\\)\\(\\$*[a-zA-Z0-9_-]+\\): *\\([a-zA-Z0-9_-\\\"\\\'\s]+\\)$")
-
+ 
 (defun cfphp-array ()
   (interactive)
   (let ((str "")
