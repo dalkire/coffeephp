@@ -56,6 +56,11 @@
 
 (defun cfphp-list ()
   "Searches backward from point to fine match for root regexp, returns list of lines."
-  (let ((end (nth 5 (posn-at-point)))
+  (let ((str "")
+        (end (nth 5 (posn-at-point)))
         (beg (re-search-backward root-regexp)))
-    (split-string (buffer-substring-no-properties beg end) "\n")))
+    (setq str (split-string (buffer-substring-no-properties beg end) "\n"))
+    (delete-region beg end)
+    str))
+
+(provide 'coffeephp)
